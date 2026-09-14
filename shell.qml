@@ -19,8 +19,14 @@ ShellRoot {
 
         implicitWidth: 700
         implicitHeight: 300
-        color: "#1e1e2e"
+        color: "transparent"   // without this you get a white/opaque box
 
+        Rectangle {
+            id: bg
+            anchors.fill: parent
+            radius: 12
+            color: "#1e1e2e"
+        }
         // Overlay — поверх всего; Exclusive — забирает клавиатуру целиком,
         // иначе ввод уйдёт в окно под нами.
         WlrLayershell.layer: WlrLayer.Overlay
@@ -42,7 +48,7 @@ ShellRoot {
                 }
 
                 Text {
-                    text: "Tab — сменить направление"
+                    text: root.target === ":ru" ? "Tab — сменить направление" : "Tab - change direction"
                     color: "#6c7086"
                     font.pixelSize: 13
                 }
@@ -58,7 +64,8 @@ ShellRoot {
                 selectionColor: "#585b70"
                 wrapMode: TextArea.Wrap
                 font.pixelSize: 16
-                placeholderText: "текст для перевода…"
+                placeholderText: root.target === ":ru" ? "текст для перевода…" : "translation text..."
+                placeholderTextColor: "#aef0f8"
 
                 background: Rectangle {
                     color: "#313244"
@@ -76,7 +83,9 @@ ShellRoot {
                                && !(event.modifiers & Qt.ShiftModifier)) {
                         if (input.text.trim() !== "") {
                             root.result = "…";
+
                             translator.running = false;
+                            translator.command = ["trans", "-b", root.target, input.text] 
                             translator.running = true;
                         }
                         event.accepted = true;
@@ -97,8 +106,6 @@ ShellRoot {
     // trans из пакета translate-shell: sudo pacman -S translate-shell
     Process {
         id: translator
-
-        command: ["trans", "-b", root.target, input.text]
 
         stdout: StdioCollector {
             onStreamFinished: root.result = this.text.trim()
