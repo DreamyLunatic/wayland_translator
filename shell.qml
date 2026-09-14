@@ -103,7 +103,20 @@ ShellRoot {
         }
     }
 
-    // trans из пакета translate-shell: sudo pacman -S translate-shell
+    Process {
+        id: clipboard
+        command: ["wl-paste", "--no-newline"]
+        running: true
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                input.text = this.text;
+                translator.command = ["trans", "-b", root.target, input.text];
+                translator.running = true;
+            }
+        }
+    }    // trans из пакета translate-shell: sudo pacman -S translate-shell
+    
     Process {
         id: translator
 
