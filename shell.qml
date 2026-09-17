@@ -7,6 +7,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 
 ShellRoot {
     id: root
@@ -17,6 +18,7 @@ ShellRoot {
     PanelWindow {
         id: win
 
+        focusable: true
         implicitWidth: 700
         implicitHeight: 300
         color: "transparent"   // without this you get a white/opaque box
@@ -30,14 +32,14 @@ ShellRoot {
         // Overlay — поверх всего; Exclusive — забирает клавиатуру целиком,
         // иначе ввод уйдёт в окно под нами.
         WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
-        Column {
+        ColumnLayout {
             anchors.fill: parent
             anchors.margins: 16
             spacing: 12
 
-            Row {
+            RowLayout {
                 spacing: 12
 
                 Text {
@@ -53,52 +55,66 @@ ShellRoot {
                     font.pixelSize: 13
                 }
             }
+            RowLayout {
+                spacing: 0
 
-            TextArea {
-                id: input
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.alignment: Qt.AlignTop
+                    
+                    TextArea {
+                        id: input
 
-                width: parent.width
-                height: 110
-                focus: true
-                color: "#cdd6f4"
-                selectionColor: "#585b70"
-                wrapMode: TextArea.Wrap
-                font.pixelSize: 16
-                placeholderText: root.target === ":ru" ? "текст для перевода…" : "translation text..."
-                placeholderTextColor: "#aef0f8"
-
-                background: Rectangle {
-                    color: "#313244"
-                    radius: 8
-                }
-
-                Keys.onPressed: function (event) {
-                    if (event.key === Qt.Key_Escape) {
-                        Qt.quit();
-                        event.accepted = true;
-                    } else if (event.key === Qt.Key_Tab) {
-                        root.target = root.target === ":ru" ? ":en" : ":ru";
-                        event.accepted = true;
-                    } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
-                               && !(event.modifiers & Qt.ShiftModifier)) {
-                        if (input.text.trim() !== "") {
-                            root.result = "…";
-
-                            translator.running = false;
-                            translator.command = ["trans", "-b", root.target, input.text] 
-                            translator.running = true;
+                        width: parent.width
+                        focus: false
+                        color: "#cdd6f4"
+                        selectionColor: "#585b70"
+                        wrapMode: TextArea.Wrap
+                        font.pixelSize: 16
+                        placeholderText: root.target === ":ru" ? "текст для перевода…" : "translation text..."
+                        placeholderTextColor: "#aef0f8"
+                    
+                        background: Rectangle {
+                            color: "#313244"
+                            radius: 8
                         }
-                        event.accepted = true;
+                        Keys.onPressed: function (event) {
+                            if (event.key === Qt.Key_Escape) {
+                                Qt.quit();
+                                event.accepted = true;
+                            } else if (event.key === Qt.Key_Tab) {
+                                root.target = root.target === ":ru" ? ":en" : ":ru";
+                                event.accepted = true;
+                            } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
+                                        && !(event.modifiers & Qt.ShiftModifier)) {
+                                if (input.text.trim() !== "") {
+                                    root.result = "…";
+
+                                    translator.running = false;
+                                    translator.command = ["trans", "-b", root.target, input.text] 
+                                    translator.running = true;
+                                }
+                                event.accepted = true;
+                            }
+                        }
                     }
                 }
             }
-
-            Text {
-                width: parent.width
-                text: root.result
-                color: "#a6e3a1"
-                wrapMode: Text.Wrap
-                font.pixelSize: 16
+            RowLayout {
+                ScrollView{
+                    id: resultView
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentWidth: availableWidth
+                    Text {
+                        width: resultView.availableWidth
+                        text: root.result
+                        color: "#a6e3a1"
+                        wrapMode: Text.Wrap
+                        font.pixelSize: 16
+                    }
+                }
             }
         }
     }
