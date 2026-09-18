@@ -1,6 +1,6 @@
 # wayland_translator
+// Interface (shell.qml) is ready to go
 
 ## TODO
 *menu
-*decide with translation engine
 *offline mode
