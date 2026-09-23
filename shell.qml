@@ -34,12 +34,19 @@ ShellRoot {
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
+        FocusScope {
+            anchors.fill: parent
+            focus: true
+            
+            Keys.onPressed: (event) => root.handleKey(event)
+        }
+
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 16
             spacing: 12
 
-            RowLayout {
+                   RowLayout {
                 spacing: 12
 
                 Text {
@@ -79,25 +86,8 @@ ShellRoot {
                             color: "#313244"
                             radius: 8
                         }
-                        Keys.onPressed: function (event) {
-                            if (event.key === Qt.Key_Escape) {
-                                Qt.quit();
-                                event.accepted = true;
-                            } else if (event.key === Qt.Key_Tab) {
-                                root.target = root.target === ":ru" ? ":en" : ":ru";
-                                event.accepted = true;
-                            } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
-                                        && !(event.modifiers & Qt.ShiftModifier)) {
-                                if (input.text.trim() !== "") {
-                                    root.result = "…";
-
-                                    translator.running = false;
-                                    translator.command = ["trans", "-b", root.target, input.text] 
-                                    translator.running = true;
-                                }
-                                event.accepted = true;
-                            }
-                        }
+                        
+                        Keys.onPressed: (event) => root.handleKey(event)
                     }
                 }
             }
@@ -117,6 +107,30 @@ ShellRoot {
                 }
             }
         }
+    }
+
+    function handleKey(event) {
+        switch (event.key) {
+        case Qt.Key_Escape:
+            Qt.quit();
+            break;
+        case Qt.Key_Tab:
+            root.target = root.target === ":ru" ? ":en" : ":ru";
+            break;
+        case Qt.Key_Return:
+        case Qt.Key_Enter:
+            if (event.modifiers & Qt.ShiftModifier)
+                return;            // не принимаем, TextArea вставит перенос
+            root.result = "…";
+
+            translator.running = false;
+            translator.command = ["trans", "-b", root.target, input.text] 
+            translator.running = true;
+            break;
+        default:
+            return;                // остальное пусть обрабатывается как обычно
+        }
+        event.accepted = true;
     }
 
     Process {
